@@ -182,25 +182,54 @@ select x.id, firstname, lastname , OrderNumber
 -- in their country, and customers and suppliers that are from the same country.
  
 select  a.FirstName , a.LastName , a.Country as [Customer Country],
-b.Country as [Supplier Country] , b.ContactName 
+b.Country as [Supplier Country] , b.CompanyName
 from customer as a
 right join supplier as b
-on a.Country = b.Country 
+on a.Country = b.Country and a.city = b.City 
 where a.Country is null
      union all
 select  a.FirstName , a.LastName , a.Country as [Customer Country],
 b.Country as [Supplier Country] ,  b.CompanyName
 from customer as a
 left join supplier as b
-on a.Country = b.Country 
+on a.Country = b.Country and a.city = b.City
 where b.Country is null
      union all
 select a.FirstName , a.LastName , a.Country as [Customer Country],
 b.Country as [Supplier Country] ,  b.CompanyName
 from customer as a
 inner join supplier as b
-on a.Country = b.Country
+on a.Country = b.Country and a.city = b.city
 order by a.Country
+
+
+--- using outer join
+
+select a.FirstName , a.LastName , a.Country as [Customer Country],
+b.Country as [Supplier Country] ,  CompanyName
+from customer as a
+full outer join supplier as b
+on a.Country = b.Country and a.city = b.city
+where a.country is null or b.Country is null or a.Country = b.Country
+order by b.Country
+
+union all 
+
+select a.FirstName , a.LastName , a.Country as [Customer Country],
+b.Country as [Supplier Country] ,  b.CompanyName
+from customer as a
+full outer join supplier as b
+on a.Country = b.Country and a.city = b.city
+where b.country is null 
+union all
+
+select a.FirstName , a.LastName , a.Country as [Customer Country],
+b.Country as [Supplier Country] ,  b.CompanyName
+from customer as a
+full outer join supplier as b
+on a.Country = b.Country and a.city = b.city
+where b.country  = a.Country 
+order by b.country
 
 --27. Match customers that are from the same city and country. That is you are asked to give a list
 -- of customers that are from same country and city. Display firstname, lastname, city and

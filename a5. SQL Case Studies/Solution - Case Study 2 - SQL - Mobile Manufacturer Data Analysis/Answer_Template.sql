@@ -2,12 +2,13 @@
 
 --Q1--BEGIN 
 	
+	
 Select distinct Loc.State
   From Fact_Transactions as Trans
   join Dim_Customer as Cust on Trans.IDCustomer = Cust.IDcustomer
   join DIM_LOCATION as Loc on Trans.IDLocation = Loc.IDLocation
   join DIM_DATE as  Dat on Trans.Date = Dat.Date
-  where  Dat.Year >= 2005;
+  where  Dat.Year >= 2005
 
 --Q1--END
 
@@ -89,84 +90,81 @@ Select
 	
 --Q7--BEGIN 
 
-Select IDModel
+Select IDModel, Model_Name
 From (
     Select Top 5
-        IDModel
+        T.IDModel, Dim.Model_Name 
     From Fact_Transactions as T
     Join DIM_DATE as  D ON T.Date = D.Date
+	Join DIM_MODEL as Dim on T.IDModel = Dim.IDModel
     Where D.Year = 2008
-    Group By IDModel
+    Group By T.IDModel, Dim.Model_Name
     Order By SUM(Quantity) DESC
 ) as year_2008
 
 Intersect
 
-Select IDModel
+Select IDModel, Model_Name
 From (
     Select Top 5
-        IDModel
+        T.IDModel, Dim.Model_Name
     From Fact_Transactions as T
     Join DIM_DATE as D ON T.Date = D.Date
+	Join DIM_MODEL as Dim on T.IDModel = Dim.IDModel
     Where D.Year = 2009
-    Group By IDModel
+  Group By T.IDModel, Dim.Model_Name
     Order By Sum(Quantity) DESC
 ) year_2009
 
 Intersect
 
-Select IDModel
+Select IDModel, Model_Name
 From (
     Select Top 5
-        IDModel
+        T.IDModel, Dim.Model_Name
     From Fact_Transactions as T
     Join DIM_DATE as D ON T.Date = D.Date
+	Join DIM_MODEL as Dim on T.IDModel = Dim.IDModel
     WHERE D.Year = 2010
-    Group by IDModel
+    Group By T.IDModel, Dim.Model_Name
     Order by SUM(Quantity) DESC
-) year_2010;
+) year_2010
 
 
 --Q7--END	
 
 
 --Q8--BEGIN
+select * from (
+      select Manufacturer_Name, d.year as years  ,dense_rank() over (order by sum(totalPrice) desc) as ranks from FACT_TRANSACTIONS as fact
+      join dim_date as d on fact.Date = d.date 
+      join DIM_MODEL as dim on fact.IDModel = dim.IDModel
+      join DIM_MANUFACTURER as manuf on dim.IDManufacturer = manuf.IDManufacturer
+      where  d.year = 2009 
+      group by Manufacturer_Name, d.year
+      ) as x 
+where ranks = 2
 
-Select
-    M1.Manufacturer_Name AS Manufacturer_2009,
-    M2.Manufacturer_Name AS Manufacturer_2010
-From (
-    Select
-        Model.IDManufacturer,
-        Dat.year,
-        Rank() Over (Partition By Dat.Year Order By Sum(Trans.Quantity) Desc) as SalesRank
-    From Fact_Transactions as Trans
-    Join Dim_Model as Model on Trans.IDModel = Model.IDModel
-    Join DIM_DATE as Dat on Trans.Date = Dat.Date
-    Where Dat.Year IN (2009, 2010)
-    Group by Model.IDManufacturer, Dat.Year
-) as rank_1
-JOIN (
-    SELECT
-        Model.IDManufacturer,
-        Dat.Year,
-        Rank() Over (Partition By Dat.Year Order By sum(Trans.Quantity) Desc) as SalesRank
-    From Fact_Transactions as Trans
-    Join Dim_Model as Model on Trans.IDModel = Model.IDModel
-    Join DIM_DATE as Dat on Trans.Date = Dat.Date
-    Where Dat.Year IN (2009, 2010)
-    Group by Model.IDManufacturer, Dat.Year
-) rank_2 
-ON Rank_1.Year = 2009 AND Rank_2.Year = 2010 AND rank_1.SalesRank = 2 AND rank_2.SalesRank = 2
-JOIN Dim_Manufacturer M1 ON Rank_1.IDManufacturer = M1.IDManufacturer
-JOIN Dim_Manufacturer M2 ON Rank_2.IDManufacturer = M2.IDManufacturer
+union 
+
+select * from (
+     select Manufacturer_Name , d.YEAR ,dense_rank() over (order by sum(totalPrice) desc) as ranks from FACT_TRANSACTIONS as fact
+     join dim_date as d on fact.Date = d.date 
+     join DIM_MODEL as dim on fact.IDModel = dim.IDModel
+     join DIM_MANUFACTURER as manuf on dim.IDManufacturer = manuf.IDManufacturer
+     where  d.year = 2010 
+     group by Manufacturer_Name, d.YEAR
+     ) as x 
+where ranks = 2
+
+
 
 --Q8--END
 
 --Q9--BEGIN
 	
 Select distinct manuf1.Manufacturer_Name
-  FROM Dim_Manufacturer as Manuf1
+  From Dim_Manufacturer as Manuf1
   join Dim_Model as Model_1 On Manuf1.IDManufacturer = Model_1.IDManufacturer
   join Fact_Transactions as Trans_1 On Model_1.IDModel = Trans_1.IDModel
   join DIM_DATE Date1 ON Trans_1.Date = Date1.Date
@@ -179,7 +177,7 @@ select distinct Manuf2.Manufacturer_Name
   join Dim_Model as Model_2 ON Manuf2.IDManufacturer = Model_2.IDManufacturer
   join Fact_Transactions as Trans_2 ON Model_2.IDModel = Trans_2.IDModel
   join DIM_DATE Date_2 ON Trans_2.Date = Date_2.Date
-  Where Date_2.Year = 2009;
+  Where Date_2.Year = 2009
 
 --Q9--END
 
